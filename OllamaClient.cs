@@ -11,6 +11,28 @@
     using System.Threading;
     using System.Threading.Tasks;
 
+    using OllamaSharp.Request;
+    using OllamaSharp.Responses;
+
+    public class Message
+    {
+        public string Role { get; set; }
+        public string Content { get; set; }
+        public List<string> Images { get; set; }
+        public List<ToolCall> ToolCalls { get; set; }
+    }
+
+    public class ToolCall
+    {
+        public FunctionCall Function { get; set; }
+    }
+
+    public class FunctionCall
+    {
+        public string Name { get; set; }
+        public Dictionary<string, object> Arguments { get; set; }
+    }
+
     public class OllamaClient
     {
         private readonly HttpClient _httpClient;
@@ -26,212 +48,15 @@
             _httpClient = new HttpClient { BaseAddress = new Uri(baseAddress) };
         }
 
-        #region Response DTOs
-        public class GenerateResponse
-        {
-            public string Model { get; set; }
-            public DateTime CreatedAt { get; set; }
-            public string Response { get; set; }
-            public bool Done { get; set; }
-            public List<int> Context { get; set; }
-            public long TotalDuration { get; set; }
-            public long LoadDuration { get; set; }
-            public int PromptEvalCount { get; set; }
-            public long PromptEvalDuration { get; set; }
-            public int EvalCount { get; set; }
-            public long EvalDuration { get; set; }
-        }
-
-        public class ChatResponse
-        {
-            public string Model { get; set; }
-            public DateTime CreatedAt { get; set; }
-            public Message Message { get; set; }
-            public bool Done { get; set; }
-            public string DoneReason { get; set; }
-            public long TotalDuration { get; set; }
-            public long LoadDuration { get; set; }
-            public int PromptEvalCount { get; set; }
-            public long PromptEvalDuration { get; set; }
-            public int EvalCount { get; set; }
-            public long EvalDuration { get; set; }
-        }
-
-        public class ModelOperationStatus
-        {
-            public string Status { get; set; }
-            public string Digest { get; set; }
-            public long? Total { get; set; }
-            public long? Completed { get; set; }
-        }
-
-        public class ModelListResponse
-        {
-            public List<Model> Models { get; set; }
-        }
-
-        public class Model
-        {
-            public string Name { get; set; }
-            public DateTime ModifiedAt { get; set; }
-            public long Size { get; set; }
-            public string Digest { get; set; }
-            public ModelDetails Details { get; set; }
-            public DateTime ExpiresAt { get; set; }
-            public long SizeVram { get; set; }
-        }
-
-        public class ModelDetails
-        {
-            public string ParentModel { get; set; }
-            public string Format { get; set; }
-            public string Family { get; set; }
-            public List<string> Families { get; set; }
-            public string ParameterSize { get; set; }
-            public string QuantizationLevel { get; set; }
-        }
-
-        public class ModelInfoResponse
-        {
-            public string Modelfile { get; set; }
-            public string Parameters { get; set; }
-            public string Template { get; set; }
-            public ModelDetails Details { get; set; }
-            public Dictionary<string, object> ModelInfo { get; set; }
-        }
-
-        public class EmbedResponse
-        {
-            public string Model { get; set; }
-            public List<List<float>> Embeddings { get; set; }
-            public long TotalDuration { get; set; }
-            public long LoadDuration { get; set; }
-            public int PromptEvalCount { get; set; }
-        }
-
-        public class VersionResponse
-        {
-            public string Version { get; set; }
-        }
-
-        public class Message
-        {
-            public string Role { get; set; }
-            public string Content { get; set; }
-            public List<string> Images { get; set; }
-            public List<ToolCall> ToolCalls { get; set; }
-        }
-
-        public class ToolCall
-        {
-            public FunctionCall Function { get; set; }
-        }
-
-        public class FunctionCall
-        {
-            public string Name { get; set; }
-            public Dictionary<string, object> Arguments { get; set; }
-        }
-        #endregion
-
-        #region Request DTOs
-        public class GenerateRequest
-        {
-            public string Model { get; set; }
-            public string Prompt { get; set; }
-            public string Suffix { get; set; }
-            public List<string> Images { get; set; }
-            public object Format { get; set; }
-            public Dictionary<string, object> Options { get; set; }
-            public string System { get; set; }
-            public string Template { get; set; }
-            public bool? Stream { get; set; }
-            public bool? Raw { get; set; }
-            public string KeepAlive { get; set; }
-            public List<int> Context { get; set; }
-        }
-
-        public class ChatRequest
-        {
-            public string Model { get; set; }
-            public List<Message> Messages { get; set; }
-            public List<Tool> Tools { get; set; }
-            public object Format { get; set; }
-            public Dictionary<string, object> Options { get; set; }
-            public bool? Stream { get; set; }
-            public string KeepAlive { get; set; }
-        }
-
-        public class Tool
-        {
-            public string Type { get; set; }
-            public FunctionDefinition Function { get; set; }
-        }
-
-        public class FunctionDefinition
-        {
-            public string Name { get; set; }
-            public string Description { get; set; }
-            public object Parameters { get; set; }
-        }
-
-        public class CreateModelRequest
-        {
-            public string Model { get; set; }
-            public string From { get; set; }
-            public Dictionary<string, string> Files { get; set; }
-            public Dictionary<string, string> Adapters { get; set; }
-            public string Template { get; set; }
-            public object License { get; set; }
-            public string System { get; set; }
-            public Dictionary<string, object> Parameters { get; set; }
-            public List<Message> Messages { get; set; }
-            public bool? Stream { get; set; }
-            public string Quantize { get; set; }
-        }
-
-        public class ModelInfoRequest
-        {
-            public string Model { get; set; }
-            public bool? Verbose { get; set; }
-        }
-
-        public class CopyModelRequest
-        {
-            public string Source { get; set; }
-            public string Destination { get; set; }
-        }
-
-        public class DeleteModelRequest
-        {
-            public string Model { get; set; }
-        }
-
-        public class PullModelRequest
-        {
-            public string Model { get; set; }
-            public bool? Insecure { get; set; }
-            public bool? Stream { get; set; }
-        }
-
-        public class PushModelRequest
-        {
-            public string Model { get; set; }
-            public bool? Insecure { get; set; }
-            public bool? Stream { get; set; }
-        }
-
-        public class EmbedRequest
-        {
-            public string Model { get; set; }
-            public object Input { get; set; }
-            public bool? Truncate { get; set; }
-            public Dictionary<string, object> Options { get; set; }
-            public string KeepAlive { get; set; }
-        }
-        #endregion
-
         #region Core Methods
+
+        /// <summary>
+        /// Generates a text completion for the given prompt using the specified model asynchronously
+        /// </summary>
+        /// <param name="request">Request parameters including model name, prompt, and generation options</param>
+        /// <param name="cancellationToken">Cancellation token to abort the operation</param>
+        /// <returns>GenerateResponse containing the generated text and performance metrics</returns>
+        /// <exception cref="HttpRequestException">Thrown when the API request fails</exception>
         public async Task<GenerateResponse> GenerateCompletionAsync(GenerateRequest request, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.PostAsJsonAsync("/api/generate", request, _jsonOptions, cancellationToken);
@@ -239,6 +64,13 @@
             return await DeserializeResponse<GenerateResponse>(response, cancellationToken);
         }
 
+        /// <summary>
+        /// Generates a chat completion for a conversation using the specified model asynchronously
+        /// </summary>
+        /// <param name="request">Chat request containing message history and model parameters</param>
+        /// <param name="cancellationToken">Cancellation token to abort the operation</param>
+        /// <returns>ChatResponse with the assistant's reply and conversation metadata</returns>
+        /// <exception cref="HttpRequestException">Thrown when the API request fails</exception>
         public async Task<ChatResponse> GenerateChatCompletionAsync(ChatRequest request, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.PostAsJsonAsync("/api/chat", request, _jsonOptions, cancellationToken);
@@ -246,6 +78,13 @@
             return await DeserializeResponse<ChatResponse>(response, cancellationToken);
         }
 
+        /// <summary>
+        /// Creates a new model from existing models, GGUF files, or safetensors directories asynchronously
+        /// </summary>
+        /// <param name="request">Model creation parameters including source files and configuration</param>
+        /// <param name="cancellationToken">Cancellation token to abort the operation</param>
+        /// <returns>List of status updates during model creation process</returns>
+        /// <exception cref="HttpRequestException">Thrown when the API request fails</exception>
         public async Task<List<ModelOperationStatus>> CreateModelAsync(CreateModelRequest request, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.PostAsJsonAsync("/api/create", request, _jsonOptions, cancellationToken);
@@ -253,6 +92,12 @@
             return await ReadStreamedResponses<ModelOperationStatus>(response, cancellationToken);
         }
 
+        /// <summary>
+        /// Checks if a specific blob exists on the Ollama server asynchronously
+        /// </summary>
+        /// <param name="digest">SHA256 digest of the blob to check</param>
+        /// <param name="cancellationToken">Cancellation token to abort the operation</param>
+        /// <returns>True if the blob exists, false otherwise</returns>
         public async Task<bool> CheckBlobExistsAsync(string digest, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.SendAsync(
@@ -262,6 +107,13 @@
             return response.IsSuccessStatusCode;
         }
 
+        /// <summary>
+        /// Uploads a blob file to the Ollama server asynchronously
+        /// </summary>
+        /// <param name="digest">Expected SHA256 digest of the blob content</param>
+        /// <param name="fileStream">Stream containing the blob data</param>
+        /// <param name="cancellationToken">Cancellation token to abort the operation</param>
+        /// <exception cref="HttpRequestException">Thrown when the upload fails</exception>
         public async Task PushBlobAsync(string digest, Stream fileStream, CancellationToken cancellationToken = default)
         {
             var content = new StreamContent(fileStream);
@@ -269,6 +121,12 @@
             response.EnsureSuccessStatusCode();
         }
 
+        /// <summary>
+        /// Retrieves list of locally available models asynchronously
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token to abort the operation</param>
+        /// <returns>ModelListResponse containing metadata about available models</returns>
+        /// <exception cref="HttpRequestException">Thrown when the API request fails</exception>
         public async Task<ModelListResponse> ListLocalModelsAsync(CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.GetAsync("/api/tags", cancellationToken);
@@ -276,6 +134,13 @@
             return await DeserializeResponse<ModelListResponse>(response, cancellationToken);
         }
 
+        /// <summary>
+        /// Gets detailed information about a specific model asynchronously
+        /// </summary>
+        /// <param name="request">Model information request parameters</param>
+        /// <param name="cancellationToken">Cancellation token to abort the operation</param>
+        /// <returns>ModelInfoResponse with technical details and configuration</returns>
+        /// <exception cref="HttpRequestException">Thrown when the API request fails</exception>
         public async Task<ModelInfoResponse> ShowModelInformationAsync(ModelInfoRequest request, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.PostAsJsonAsync("/api/show", request, _jsonOptions, cancellationToken);
@@ -283,12 +148,24 @@
             return await DeserializeResponse<ModelInfoResponse>(response, cancellationToken);
         }
 
+        /// <summary>
+        /// Creates a copy of an existing model with a new name asynchronously
+        /// </summary>
+        /// <param name="request">Copy operation parameters including source and destination names</param>
+        /// <param name="cancellationToken">Cancellation token to abort the operation</param>
+        /// <exception cref="HttpRequestException">Thrown when the copy operation fails</exception>
         public async Task CopyModelAsync(CopyModelRequest request, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.PostAsJsonAsync("/api/copy", request, _jsonOptions, cancellationToken);
             response.EnsureSuccessStatusCode();
         }
 
+        /// <summary>
+        /// Permanently deletes a model from the local storage asynchronously
+        /// </summary>
+        /// <param name="request">Delete request specifying model to remove</param>
+        /// <param name="cancellationToken">Cancellation token to abort the operation</param>
+        /// <exception cref="HttpRequestException">Thrown when the deletion fails</exception>
         public async Task DeleteModelAsync(DeleteModelRequest request, CancellationToken cancellationToken = default)
         {
             var requestMessage = new HttpRequestMessage(HttpMethod.Delete, "/api/delete")
@@ -299,6 +176,13 @@
             response.EnsureSuccessStatusCode();
         }
 
+        /// <summary>
+        /// Downloads a model from the Ollama library asynchronously
+        /// </summary>
+        /// <param name="request">Pull request parameters including model name</param>
+        /// <param name="cancellationToken">Cancellation token to abort the operation</param>
+        /// <returns>List of progress updates during the download process</returns>
+        /// <exception cref="HttpRequestException">Thrown when the download fails</exception>
         public async Task<List<ModelOperationStatus>> PullModelAsync(PullModelRequest request, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.PostAsJsonAsync("/api/pull", request, _jsonOptions, cancellationToken);
@@ -306,6 +190,13 @@
             return await ReadStreamedResponses<ModelOperationStatus>(response, cancellationToken);
         }
 
+        /// <summary>
+        /// Uploads a model to a model library asynchronously
+        /// </summary>
+        /// <param name="request">Push request parameters including model name</param>
+        /// <param name="cancellationToken">Cancellation token to abort the operation</param>
+        /// <returns>List of progress updates during the upload process</returns>
+        /// <exception cref="HttpRequestException">Thrown when the upload fails</exception>
         public async Task<List<ModelOperationStatus>> PushModelAsync(PushModelRequest request, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.PostAsJsonAsync("/api/push", request, _jsonOptions, cancellationToken);
@@ -313,6 +204,13 @@
             return await ReadStreamedResponses<ModelOperationStatus>(response, cancellationToken);
         }
 
+        /// <summary>
+        /// Generates vector embeddings for input text using the specified model asynchronously
+        /// </summary>
+        /// <param name="request">Embedding request parameters</param>
+        /// <param name="cancellationToken">Cancellation token to abort the operation</param>
+        /// <returns>EmbedResponse containing generated embeddings and performance data</returns>
+        /// <exception cref="HttpRequestException">Thrown when the API request fails</exception>
         public async Task<EmbedResponse> GenerateEmbeddingsAsync(EmbedRequest request, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.PostAsJsonAsync("/api/embed", request, _jsonOptions, cancellationToken);
@@ -320,6 +218,12 @@
             return await DeserializeResponse<EmbedResponse>(response, cancellationToken);
         }
 
+        /// <summary>
+        /// Lists currently loaded/running models asynchronously
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token to abort the operation</param>
+        /// <returns>ModelListResponse with metadata about active models</returns>
+        /// <exception cref="HttpRequestException">Thrown when the API request fails</exception>
         public async Task<ModelListResponse> ListRunningModelsAsync(CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.GetAsync("/api/ps", cancellationToken);
@@ -327,6 +231,12 @@
             return await DeserializeResponse<ModelListResponse>(response, cancellationToken);
         }
 
+        /// <summary>
+        /// Retrieves the Ollama server version information asynchronously
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token to abort the operation</param>
+        /// <returns>VersionResponse containing the server version string</returns>
+        /// <exception cref="HttpRequestException">Thrown when the API request fails</exception>
         public async Task<VersionResponse> GetVersionAsync(CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.GetAsync("/api/version", cancellationToken);
@@ -336,45 +246,127 @@
         #endregion
 
         #region Synchronous Methods
+
+        /// <summary>
+        /// Generates a text completion for the given prompt using the specified model
+        /// </summary>
+        /// <param name="request">Request parameters including model name, prompt, and generation options</param>
+        /// <param name="cancellationToken">Cancellation token to abort the operation</param>
+        /// <returns>GenerateResponse containing the generated text and performance metrics</returns>
+        /// <exception cref="HttpRequestException">Thrown when the API request fails</exception>
         public GenerateResponse GenerateCompletion(GenerateRequest request, CancellationToken cancellationToken = default)
             => GenerateCompletionAsync(request, cancellationToken).GetAwaiter().GetResult();
 
+        /// <summary>
+        /// Generates a chat completion for a conversation using the specified model
+        /// </summary>
+        /// <param name="request">Chat request containing message history and model parameters</param>
+        /// <param name="cancellationToken">Cancellation token to abort the operation</param>
+        /// <returns>ChatResponse with the assistant's reply and conversation metadata</returns>
+        /// <exception cref="HttpRequestException">Thrown when the API request fails</exception>
         public ChatResponse GenerateChatCompletion(ChatRequest request, CancellationToken cancellationToken = default)
             => GenerateChatCompletionAsync(request, cancellationToken).GetAwaiter().GetResult();
 
+        /// <summary>
+        /// Creates a new model from existing models, GGUF files, or safetensors directories
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public List<ModelOperationStatus> CreateModel(CreateModelRequest request, CancellationToken cancellationToken = default)
             => CreateModelAsync(request, cancellationToken).GetAwaiter().GetResult();
 
+        /// <summary>
+        /// Checks if a specific blob exists on the Ollama server
+        /// </summary>
+        /// <param name="digest"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public bool CheckBlobExists(string digest, CancellationToken cancellationToken = default)
             => CheckBlobExistsAsync(digest, cancellationToken).GetAwaiter().GetResult();
 
+        /// <summary>
+        /// Uploads a blob file to the Ollama server
+        /// </summary>
+        /// <param name="digest"></param>
+        /// <param name="fileStream"></param>
+        /// <param name="cancellationToken"></param>
         public void PushBlob(string digest, Stream fileStream, CancellationToken cancellationToken = default)
             => PushBlobAsync(digest, fileStream, cancellationToken).GetAwaiter().GetResult();
 
+        /// <summary>
+        /// Retrieves list of locally available models
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public ModelListResponse ListLocalModels(CancellationToken cancellationToken = default)
             => ListLocalModelsAsync(cancellationToken).GetAwaiter().GetResult();
 
+        /// <summary>
+        /// Gets detailed information about a specific model
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public ModelInfoResponse ShowModelInformation(ModelInfoRequest request, CancellationToken cancellationToken = default)
             => ShowModelInformationAsync(request, cancellationToken).GetAwaiter().GetResult();
 
+        /// <summary>
+        /// Creates a copy of an existing model with a new name
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="cancellationToken"></param>
         public void CopyModel(CopyModelRequest request, CancellationToken cancellationToken = default)
             => CopyModelAsync(request, cancellationToken).GetAwaiter().GetResult();
 
+        /// <summary>
+        /// Permanently deletes a model from the local storage
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="cancellationToken"></param>
         public void DeleteModel(DeleteModelRequest request, CancellationToken cancellationToken = default)
             => DeleteModelAsync(request, cancellationToken).GetAwaiter().GetResult();
 
+        /// <summary>
+        /// Downloads a model from the Ollama library
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public List<ModelOperationStatus> PullModel(PullModelRequest request, CancellationToken cancellationToken = default)
             => PullModelAsync(request, cancellationToken).GetAwaiter().GetResult();
 
+        /// <summary>
+        /// Uploads a model to a model library
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public List<ModelOperationStatus> PushModel(PushModelRequest request, CancellationToken cancellationToken = default)
             => PushModelAsync(request, cancellationToken).GetAwaiter().GetResult();
 
+        /// <summary>
+        /// Generates vector embeddings for input text using the specified model
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public EmbedResponse GenerateEmbeddings(EmbedRequest request, CancellationToken cancellationToken = default)
             => GenerateEmbeddingsAsync(request, cancellationToken).GetAwaiter().GetResult();
 
+        /// <summary>
+        /// Lists currently loaded/running models
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public ModelListResponse ListRunningModels(CancellationToken cancellationToken = default)
             => ListRunningModelsAsync(cancellationToken).GetAwaiter().GetResult();
 
+        /// <summary>
+        /// Retrieves the Ollama server version information
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public VersionResponse GetVersion(CancellationToken cancellationToken = default)
             => GetVersionAsync(cancellationToken).GetAwaiter().GetResult();
         #endregion
